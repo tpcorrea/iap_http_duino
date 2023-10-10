@@ -17,8 +17,8 @@
   ******************************************************************************
   */
 /* Define to prevent recursive inclusion -------------------------------------*/
-#ifndef __MAIN_H
-#define __MAIN_H
+#ifndef __IAPCONFIG_DEFAULT_H
+#define __IAPCONFIG_DEFAULT_H
 
 #ifdef __cplusplus
  extern "C" {

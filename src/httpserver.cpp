@@ -39,7 +39,6 @@
 #include "httpserver.h"
 #include "lwip/tcp.h"
 #include "fsdata.c"
-#include "main.h"
 #include "flash_if.h"
 
 #include "debug.h"
@@ -241,7 +240,7 @@ err_enum_t __RAM_FUNC HttpIapServer::server(EthernetClient *client)
   {
     len = _client->read((uint8_t*)data, sizeof(data));
   }
-   DEBUG_MESSAGE("# Received %d bytes\n\r", len);
+  DEBUG_MESSAGE("# Received %d bytes\n\r", len);
 
   switch (getType(data, len))
   {
@@ -361,7 +360,6 @@ err_enum_t __RAM_FUNC HttpIapServer::server(EthernetClient *client)
 
   case ClientRequestType::DATA:
     /* code */
-    DEBUG_MESSAGE("# Received %d\n\r", _client->available());
     _totalReceived += len;
     DEBUG_MESSAGE("# Total data %d, size %d\n\r", _totalReceived, _size);
 

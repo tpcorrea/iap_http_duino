@@ -48,6 +48,7 @@
 #include "STM32Ethernet.h"
 #include "lwip/def.h"
 #include "fsdata.h"
+#include "iapconfig.h"
 
 typedef struct 
 {

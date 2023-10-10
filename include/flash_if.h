@@ -24,14 +24,13 @@
 #endif
 
 /* Includes ------------------------------------------------------------------*/
-#include "main.h"
+#include "stm32f4xx_hal.h"
 
 /* Exported types ------------------------------------------------------------*/
 /* Exported constants --------------------------------------------------------*/
-
+/* Exported macro ------------------------------------------------------------*/
 #define __IAP_FUNC __attribute__((section(".iap_flash")))
 // #define __IAP_FUNC  __attribute__( ( long_call, section(".iap_flash") ) )
-/* Exported macro ------------------------------------------------------------*/
 /* Exported functions ------------------------------------------------------- */
 uint32_t FLASH_If_Write(__IO uint32_t* Address, uint32_t const * Data, uint16_t DataLength);
 int8_t FLASH_If_Erase(uint32_t initialSector, uint32_t nbSectors);
