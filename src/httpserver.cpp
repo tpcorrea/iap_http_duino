@@ -32,13 +32,16 @@
  */
 
 #include <Arduino.h>
+#include <string.h>
+#include <stdio.h>
+
 #include "httpserver.h"
 #include "lwip/tcp.h"
 #include "fsdata.c"
 #include "main.h"
 #include "flash_if.h"
-#include <string.h>
-#include <stdio.h>
+
+#include "debug.h"
 
 #ifdef USE_IAP_HTTP
 
@@ -111,27 +114,27 @@ ClientRequestType HttpIapServer::getType(char *data, uint32_t len)
 
   if (strncmp(data, "GET / HTTP", 10) == 0)
   {
-    Serial.println("# GET / HTTP");
+     DEBUG_MESSAGE("# GET / HTTP\n\r");
     return ClientRequestType::GET_HTTP;
   }
   else if (strncmp(data, "GET /resetmcu.cgi", 17) == 0)
   {
-    Serial.println("# GET /resetmcu.cgi");
+     DEBUG_MESSAGE("# GET /resetmcu.cgi\n\r");
     return ClientRequestType::GET_RESETMCU;
   }
   else if (strncmp(data, "GET /favicon.ico", 16) == 0)
   {
-    Serial.println("# GET /favicon.ico");
+     DEBUG_MESSAGE("# GET /favicon.ico\n\r");
     return ClientRequestType::GET_FAVICON;
   }
   else if (strncmp(data, "POST /checklogin.cgi", 20) == 0)
   {
-    Serial.println("# POST /checklogin.cgi");
+     DEBUG_MESSAGE("# POST /checklogin.cgi\n\r");
     return ClientRequestType::POST_CHECKLOGIN;
   }
   else if (strncmp(data, "POST /upload.cgi", 16) == 0)
   {
-    Serial.println("# POST /upload.cgi");
+     DEBUG_MESSAGE("# POST /upload.cgi\n\r");
     return ClientRequestType::POST_UPLOAD;
   }
   else
@@ -237,7 +240,7 @@ err_enum_t __RAM_FUNC HttpIapServer::server(EthernetClient *client)
   {
     len = _client->read((uint8_t*)data, sizeof(data));
   }
-  Serial.printf("# Received %d bytes\n\r", len);
+   DEBUG_MESSAGE("# Received %d bytes\n\r", len);
 
   switch (getType(data, len))
   {
@@ -351,15 +354,13 @@ err_enum_t __RAM_FUNC HttpIapServer::server(EthernetClient *client)
     {
     }
 
-    Serial.write(data, len);
-
     break;
 
   case ClientRequestType::DATA:
     /* code */
-    Serial.printf("# data %d\n\r", _client->available());
+    DEBUG_MESSAGE("# Received %d\n\r", _client->available());
     _totalReceived += len;
-    Serial.printf("# Total data %d, size %d\n\r", _totalReceived, _size);
+    DEBUG_MESSAGE("# Total data %d, size %d\n\r", _totalReceived, _size);
 
     if (_totalReceived == _size)
     {
@@ -377,6 +378,7 @@ err_enum_t __RAM_FUNC HttpIapServer::server(EthernetClient *client)
         writeToFlash(data, len);
 
       _dataFlag = 0;
+      DEBUG_MESSAGE("# Writing to Flash\n\r");
       updateFirmware();
 
       _htmlpage = htmlpageState::UploadDonePage;
@@ -406,7 +408,7 @@ err_enum_t __RAM_FUNC HttpIapServer::server(EthernetClient *client)
  * @param  file : pointer to a fs_file structure
  * @retval  1 if success, 0 if fail
  */
-int HttpIapServer::openFs(char *name, fs_file *file)
+int HttpIapServer::openFs(char const *name, fs_file *file)
 {
   struct fsdata_file_noconst *f;
 
@@ -495,11 +497,11 @@ void __IAP_FUNC HttpIapServer::writeToFlash(const char *data, uint32_t len)
       }
       j++;
     }
+
     if(FLASH_If_Write(&_flashWriteAddress, (uint32_t *)(_leftBytesTab), 1))
     {
-      Serial.println("# Flash ERROR.\n\r");
+      DEBUG_MESSAGE("# Flash ERROR.\n\r");
     }
-    // Serial.printf("# Wrote to %d, %d bytes\n\r", _flashWriteAddress, 1);
     _leftBytes = 0;
 
     /* update data pointer */
@@ -524,12 +526,11 @@ void __IAP_FUNC HttpIapServer::writeToFlash(const char *data, uint32_t len)
     else
       count++;
   }
+  
   if(FLASH_If_Write(&_flashWriteAddress, (uint32_t *)data, count))
   {
-    Serial.println("# Flash ERROR.\n\r");
+    DEBUG_MESSAGE("# Flash ERROR.\n\r");
   }
-
-  // Serial.printf("# Wrote to %d, %d bytes\n\r", _flashWriteAddress, count);
 }
 #endif
 
@@ -593,6 +594,7 @@ int32_t __IAP_FUNC HttpIapServer::updateFirmware()
   _leftBytes = 0; 
   writeToFlash(data, _totalReceived -  IAP_SECTOR_SIZE); 
   _resetPage = 1; 
+  /* exit critical code area*/
   interrupts();
 
   return 0;

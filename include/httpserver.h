@@ -93,7 +93,7 @@ private:
   __IO uint8_t _resetPage;
   uint32_t _contentLengthOffset;
 
-  int openFs(char *name, fs_file *file);
+  int openFs(char const *name, fs_file *file);
   void sendData();
   uint32_t parseContentLength(const char *data, uint32_t len);
   void writeToFlash(const char *data, uint32_t len);
