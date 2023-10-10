@@ -1,0 +1,69 @@
+#include <Arduino.h>
+#include <STM32Ethernet.h>
+
+#include "main.h"
+#include "httpserver.h"
+#include "debug.h"
+
+// Tasks
+static void taskEthernetClient(void);
+
+// Enter an IP address for your controller below.
+// The IP address will be dependent on your local network:
+IPAddress ip(192, 168, 7, 200);
+
+// Initialize the Ethernet server library
+// with the IP address and port you want to use
+// (port 80 is default for HTTP):
+EthernetServer server(80);
+HttpIapServer iapServer;
+
+void setup() {
+  // Open serial communications and wait for port to open:
+  Serial.begin(115200);
+  while (!Serial) {
+    ; // wait for serial port to connect. Needed for native USB port only
+  }
+
+  // start the Ethernet connection and the server:
+  Ethernet.begin(ip);
+  server.begin();
+  Serial.print("server is at ");
+  Serial.println(Ethernet.localIP());
+}
+
+//-----------------------------------------------------------------------------
+void loop() 
+{
+  taskEthernetClient();
+}
+__RAM_FUNC
+//------------------- TASKS ---------------------------------------------------
+static void __RAM_FUNC taskEthernetClient(void)
+{
+
+  char data[1500];
+  int32_t len;
+
+  // listen for incoming clients
+  EthernetClient client = server.available();
+
+
+  if (client) {
+    Serial.println("new client");
+
+    /* Allocate memory for the structure that holds the state of the connection */
+    // an http request ends with a blank line
+    while (client.connected()) {
+      if (client.available()) {
+        iapServer.server(&client);
+      }
+    }
+
+    // give the web browser time to receive the data
+    delay(1);
+    // close the connection:
+    client.stop();
+    Serial.println("client disconnected");
+  }
+}

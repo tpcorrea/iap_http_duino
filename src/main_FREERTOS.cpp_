@@ -1,0 +1,124 @@
+//-----------------------------------------------------------------------------
+#include <Arduino.h>
+#include <STM32FreeRTOS.h>
+#include <LwIP.h>
+#include <STM32Ethernet.h>
+
+#include "httpserver.h"
+#include "debug.h"
+
+//-----------------------------------------------------------------------------
+// ***** ATTENTION *******
+// THE HSE value has to be adjusted inside the file stm32f4xx_hal_conf_default.h to
+// #define HSE_VALUE              25000000U /*!< Value of the External oscillator in Hz */
+// This files is at framework-arduinoststm32\system\STM32F4xx\ folder
+
+// In      stm32f4xx_hal_conf.h
+// Add:    #define HAL_ETH_LEGACY_MODULE_ENABLED  
+// Before: #include "variant.h"
+
+// in       PeripheralPins_BLACK_F407ZX.c:
+// Replace: #ifdef HAL_ETH_MODULE_ENABLED
+// by:      #if defined(HAL_ETH_MODULE_ENABLED) || defined(HAL_ETH_LEGACY_MODULE_ENABLED)
+
+//-----------------------------------------------------------------------------
+// Values in ms, except otherwise noted
+#define ETHSCHEDULETASKINTERVAL 10U
+#define CHKLINKINTERVAL 1000U
+#define MODBUSTASKINTERVAL 100U
+#define WATCHDOGINTERVALUS (4*MODBUSTASKINTERVAL*1000U)
+
+//-----------------------------------------------------------------------------
+// Timer configuration
+#define timPinClkOut PB6
+
+//-----------------------------------------------------------------------------
+// Function prototype
+
+// Tasks
+static void taskEthernetSchedule(void *pvParameters);
+static void taskModbus(void *pvParameters);
+// Semaphores
+
+//-----------------------------------------------------------------------------
+// Global variables
+IPAddress ip(192, 168, 7, 200);
+EthernetServer server(80);
+HttpIapServer iapServer;
+
+//-----------------------------------------------------------------------------
+void setup() 
+{
+  portBASE_TYPE s1, s2;
+
+  // Start SerialPort 
+  Serial.begin(115200);
+
+  s1 = xTaskCreate(taskModbus, NULL, 0x400, NULL, 2, NULL);
+  s2 = xTaskCreate(taskEthernetSchedule, NULL, configMINIMAL_STACK_SIZE, NULL, 2, NULL);
+  
+  // check for creation errors
+  if (s1 != pdPASS || s2 != pdPASS ) 
+  {
+    DEBUG_MESSAGE(F("Creation problem\n\r"));
+    while(1);
+  }
+
+  // start scheduler
+  DEBUG_MESSAGE("# System running. \n\r");
+  vTaskStartScheduler();
+  DEBUG_MESSAGE("Insufficient RAM\n\r");
+  while(1);
+
+}
+
+//-----------------------------------------------------------------------------
+void loop() 
+{ // loop task is never reached when using FreeRTOS
+}
+
+//------------------- TASKS ---------------------------------------------------
+void vApplicationIdleHook( void )
+{
+
+}
+
+static void taskEthernetSchedule(void *pvParamenters)
+{
+  for (;;) {
+    Ethernet.schedule();
+    vTaskDelay(pdMS_TO_TICKS(ETHSCHEDULETASKINTERVAL)); 
+  }
+}
+
+static void __RAM_FUNC taskModbus(void *pvParameters)
+{
+  UNUSED(pvParameters);
+
+  Ethernet.begin(ip);
+  server.begin();
+
+  for (;;) {
+
+    EthernetClient client = server.available();
+    if (client) {
+      DEBUG_MESSAGE("# new client\n\r");
+
+      while (client.connected()) {
+        if (client.available()) {
+          iapServer.server(&client); 
+        }
+        taskYIELD();
+      }
+
+      // give the web browser time to receive the data
+      delay(1);
+      // close the connection:
+      client.stop();
+      DEBUG_MESSAGE("# client disconnected\n\r");
+    }
+
+    // Sleep for 100 milliseconds.
+    vTaskDelay(pdMS_TO_TICKS(MODBUSTASKINTERVAL));               
+  }
+}

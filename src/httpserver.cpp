@@ -34,6 +34,7 @@
 #include <Arduino.h>
 #include <string.h>
 #include <stdio.h>
+// #include <STM32FreeRTOS.h>
 
 #include "httpserver.h"
 #include "lwip/tcp.h"
@@ -346,7 +347,9 @@ err_enum_t __RAM_FUNC HttpIapServer::server(EthernetClient *client)
       /* init flash */
       FLASH_If_Init();
       /* erase temporary flash area */
-      FLASH_If_Erase(TEMP_PROG_BEGIN_SECTOR, TEMP_PROG_END_SECTOR);
+      noInterrupts();
+      while(FLASH_If_Erase(TEMP_PROG_BEGIN_SECTOR, TEMP_PROG_END_SECTOR)) {}
+      interrupts();
 
       _flashWriteAddress = TEMP_PROG_BEGIN_ADDRESS;
     }
@@ -587,8 +590,7 @@ int32_t __IAP_FUNC HttpIapServer::updateFirmware()
   /* init flash */
   FLASH_If_Init();
   /* erase user flash area */
-  FLASH_If_Erase(USER_PROG_BEGIN_SECTOR, USER_PROG_END_SECTOR);
-  /* exit critical code area*/
+  while(FLASH_If_Erase(USER_PROG_BEGIN_SECTOR, USER_PROG_END_SECTOR)) {};
  
   _flashWriteAddress = USER_PROG_BEGIN_ADDRESS; // destination address
   _leftBytes = 0; 
