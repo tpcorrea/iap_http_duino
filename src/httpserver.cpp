@@ -579,7 +579,7 @@ int32_t HttpIapServer::readPacket(char data[], const int maxLength)
  * @brief  copy data from temporary FLASH to user FLASH 
  * @retval none
  */
-int32_t __IAP_FUNC HttpIapServer::updateFirmware()
+int32_t __RAM_FUNC HttpIapServer::updateFirmware()
 {
   char* data = (char*)(TEMP_PROG_BEGIN_ADDRESS + IAP_SECTOR_SIZE); // Address of first data
 

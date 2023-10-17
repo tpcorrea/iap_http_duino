@@ -6,6 +6,7 @@
 #include "iapconfig_custom.h"
 #else
 #include "iapconfig_default.h"
+#warning "IAP using default configuration. The USER must include a custom configuration with the correct address values"
 #endif
 
 #endif /* IAPCONFIG */

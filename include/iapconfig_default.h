@@ -1,9 +1,9 @@
 /**
   ******************************************************************************
-  * @file    LwIP/LwIP_IAP/Inc/main.h
+  * @file    iap_http_duino/incluide/iapconfig_default.h
   * @author  MCD Application Team, modified by Tomas P. Correa
-  * @brief   This file contains all the functions prototypes for the main.c 
-  *          file.
+  * @brief   This file contains the address configurations for the In-Application 
+  * Programming using a HTTP server 
   ******************************************************************************
   * @attention
   *
@@ -20,32 +20,25 @@
 #ifndef __IAPCONFIG_DEFAULT_H
 #define __IAPCONFIG_DEFAULT_H
 
-#ifdef __cplusplus
- extern "C" {
-#endif
-
 /* Includes ------------------------------------------------------------------*/
-#include "stm32f4xx_hal.h"
-
 /* Exported types ------------------------------------------------------------*/
 /* Exported constants --------------------------------------------------------*/
-
-/* IAP options selection ******************************************************/
-#define USE_IAP_HTTP   /* enable IAP using HTTP */
 
 /* Flash user area definition *************************************************/   
 /* 
    IMPORTANT NOTE:
    ==============
    This program uses a temporary flash range for storing the incoming program before
-   replacing the current program at the user memory.
+   replacing the current program at the user memory. Of course, this is suboptimal, 
+   since we limit the maximum program size to half the available memory.
    
    The sectors and memory addresses must be in accordance to what was defined in the 
    linkers file ("iapscript.ld") and the exact STM32 device. 
 
    For example, here we use sector 5 (128kB long) for storing the incoming data and,
    after total reception, the firmware will stop all interrupts and copy this to the
-   real user region, from Sector 1 to Sector 4.
+   real user region, from Sector 1 to Sector 4. Sector 0 is assumed to hold the isr_vector
+   and the iap functions that run while the programming is happening.
    */
 
 #define USER_PROG_BEGIN_ADDRESS 0x8004000  
@@ -64,31 +57,5 @@
 #define USERID       "user"
 #define PASSWORD     "stm32"
 #define LOGIN_SIZE   (17+ sizeof(USERID) + sizeof(PASSWORD))
- 
-/* Static IP Address definition ***********************************************/
-#define IP_ADDR0   (uint8_t) 192
-#define IP_ADDR1   (uint8_t) 168
-#define IP_ADDR2   (uint8_t) 0
-#define IP_ADDR3   (uint8_t) 10
 
-/* NETMASK definition *********************************************************/
-#define NETMASK_ADDR0   (uint8_t) 255
-#define NETMASK_ADDR1   (uint8_t) 255
-#define NETMASK_ADDR2   (uint8_t) 255
-#define NETMASK_ADDR3   (uint8_t) 0
-
-/* Gateway Address definition *************************************************/
-#define GW_ADDR0   (uint8_t) 192
-#define GW_ADDR1   (uint8_t) 168
-#define GW_ADDR2   (uint8_t) 0
-#define GW_ADDR3   (uint8_t) 1
-
-/* Exported macro ------------------------------------------------------------*/
-/* Exported functions ------------------------------------------------------- */  
-/* Exported function prototypes ----------------------------------------------*/
-
-#ifdef __cplusplus
-}
-#endif
-
-#endif /* __MAIN_H */
+#endif /* __IAPCONFIG_DEFAULT_H */
