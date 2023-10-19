@@ -43,8 +43,6 @@
 
 #include "debug.h"
 
-#ifdef USE_IAP_HTTP
-
 static const char http_crnl_2[4] =
     /* "\r\n--" */
     {0xd, 0xa, 0x2d, 0x2d};
@@ -533,7 +531,6 @@ void __IAP_FUNC HttpIapServer::writeToFlash(const char *data, uint32_t len)
     DEBUG_MESSAGE("# Flash ERROR.\n\r");
   }
 }
-#endif
 
 /**
  * @brief  gets incoming data till first blank line 

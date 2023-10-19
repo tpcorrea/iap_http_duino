@@ -41,10 +41,6 @@
 #ifndef __HTTPD_H__
 #define __HTTPD_H__
 
-// #ifdef __cplusplus
-//  extern "C" {
-// #endif
-
 #include "STM32Ethernet.h"
 #include "lwip/def.h"
 #include "fsdata.h"
@@ -109,10 +105,5 @@ public:
   ~HttpIapServer();
   err_enum_t server(EthernetClient *client);
 };
-
-
-// #ifdef __cplusplus
-// }
-// #endif
 
 #endif /* __HTTPD_H__ */
