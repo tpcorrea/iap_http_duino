@@ -211,7 +211,7 @@ void HttpIapServer::sendData()
  * @param client: pointer to EthernetClient object
  * @retval err
  */
-err_enum_t __RAM_FUNC HttpIapServer::server(EthernetClient *client)
+err_enum_t HttpIapServer::server(EthernetClient *client)
 {
   int32_t i;
   int32_t len;
@@ -263,8 +263,13 @@ err_enum_t __RAM_FUNC HttpIapServer::server(EthernetClient *client)
     sendData();
     _client->stop();
     /* Generate a software reset */
-    if(1 == _resetPage){NVIC_SystemReset();}
-
+    if(1 == _resetPage){
+      /* enter critical code area*/
+      noInterrupts();
+      updateFirmware();
+      NVIC_SystemReset();
+      while(1){}
+    }
     break;
 
   case ClientRequestType::GET_FAVICON:
@@ -377,9 +382,7 @@ err_enum_t __RAM_FUNC HttpIapServer::server(EthernetClient *client)
         writeToFlash(data, len);
 
       _dataFlag = 0;
-      DEBUG_MESSAGE("# Writing to Flash\n\r");
-      updateFirmware();
-
+      
       _htmlpage = htmlpageState::UploadDonePage;
       /* send uploaddone.html page */
       openFs("/uploaddone.html", &file);
@@ -387,6 +390,7 @@ err_enum_t __RAM_FUNC HttpIapServer::server(EthernetClient *client)
       hs->left = file.len;
       sendData();
       _client->stop();
+      _resetPage = 1;
     }
     else
     {
@@ -576,12 +580,10 @@ int32_t HttpIapServer::readPacket(char data[], const int maxLength)
  * @brief  copy data from temporary FLASH to user FLASH 
  * @retval none
  */
-int32_t __RAM_FUNC HttpIapServer::updateFirmware()
+int32_t __IAP_FUNC HttpIapServer::updateFirmware()
 {
   char* data = (char*)(TEMP_PROG_BEGIN_ADDRESS + IAP_SECTOR_SIZE); // Address of first data
 
-  /* enter critical code area*/
-  noInterrupts();
   /* init flash */
   FLASH_If_Init();
   /* erase user flash area */
@@ -590,9 +592,6 @@ int32_t __RAM_FUNC HttpIapServer::updateFirmware()
   _flashWriteAddress = USER_PROG_BEGIN_ADDRESS; // destination address
   _leftBytes = 0; 
   writeToFlash(data, _totalReceived -  IAP_SECTOR_SIZE); 
-  _resetPage = 1; 
-  /* exit critical code area*/
-  interrupts();
 
   return 0;
 }
