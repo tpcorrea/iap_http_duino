@@ -40,7 +40,7 @@ MEMORY
   CCMRAM    (xrw)    : ORIGIN = 0x10000000,   LENGTH = 64K
   RAM    (xrw)    : ORIGIN = 0x20000000,   LENGTH = LD_MAX_DATA_SIZE
   FLASH_SECTOR0 (rx) : ORIGIN = 0x8000000 , LENGTH = 0x04000   
-  FLASH    (rx)    : ORIGIN = 0x8004000, LENGTH = 0x1C000
+  FLASH    (rx)    : ORIGIN = 0x8004010, LENGTH = 0x1BFF0
   /*
   FLASH_SECTOR0 (rx) : ORIGIN = 0x8000000 , LENGTH = 0x04000   
   FLASH_SECTOR1 (rx) : ORIGIN = 0x8004000 , LENGTH = 0x04000   
@@ -51,7 +51,6 @@ MEMORY
   FLASH_SECTOR6 (rx) : ORIGIN = 0x8040000 , LENGTH = 0x20000   
   FLASH_SECTOR7 (rx) : ORIGIN = 0x8060000 , LENGTH = 0x20000   
   */
-  /*FLASH    (rx)    : ORIGIN = 0x8000000 + 0x4000, LENGTH = LD_MAX_SIZE - 0x4000   */
 }
 
 /* Sections */
@@ -71,12 +70,19 @@ SECTIONS
     . = ALIGN(4);
     PROVIDE ( _iap_flash_start = . );
     KEEP(*(.iap_flash))
-    *stm32yyxx_hal_flash_ex.c.o (.text .text*)
+    *main.cpp.o (.text .text*)
+    *startup_stm32yyxx.S.o (.text .text*)
+    *stm32yyxx_hal_flash_ex.c.o 
     *stm32yyxx_hal_flash.c.o (.text .text*)
     *stm32yyxx_hal.c.o (.text .text*)
-    PROVIDE ( _iap_flash_end = . );
     . = ALIGN(4);
   } >FLASH_SECTOR0
+
+  .iap_const 0x8004000:
+  {
+    _iap_const_addr = .;
+    KEEP(*(.iap_const)) /* Startup code */
+  }
 
   /* The program code and other data into "FLASH" Rom type memory */
   .text :
@@ -91,6 +97,10 @@ SECTIONS
     KEEP (*(.init))
     KEEP (*(.fini))
     /* It is necessary to put the next*/
+    *(EXCLUDE_FILE (*main.cpp.o) .text)
+    *(EXCLUDE_FILE (*main.cpp.o) .text*)
+    *(EXCLUDE_FILE (*startup_stm32yyxx.S.o) .text)
+    *(EXCLUDE_FILE (*startup_stm32yyxx.S.o) .text*)
     *(EXCLUDE_FILE (*stm32yyxx_hal_flash_ex.c.o) .text)
     *(EXCLUDE_FILE (*stm32yyxx_hal_flash_ex.c.o) .text*)
     *(EXCLUDE_FILE (*stm32yyxx_hal_flash.c.o) .text)

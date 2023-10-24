@@ -4,6 +4,7 @@
 #include <LwIP.h>
 #include <STM32Ethernet.h>
 
+#include "iapsetup.h"
 #include "httpserver.h"
 #include "debug.h"
 
@@ -47,7 +48,7 @@ EthernetServer server(80);
 HttpIapServer iapServer;
 
 //-----------------------------------------------------------------------------
-void setup() 
+void user_setup() 
 {
   portBASE_TYPE s1, s2;
 
@@ -73,7 +74,7 @@ void setup()
 }
 
 //-----------------------------------------------------------------------------
-void loop() 
+void user_loop() 
 { // loop task is never reached when using FreeRTOS
 }
 
@@ -91,7 +92,7 @@ static void taskEthernetSchedule(void *pvParamenters)
   }
 }
 
-static void __RAM_FUNC taskModbus(void *pvParameters)
+static void taskModbus(void *pvParameters)
 {
   UNUSED(pvParameters);
 
